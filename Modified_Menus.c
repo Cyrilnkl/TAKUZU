@@ -92,3 +92,47 @@ void Menu_second_1(){
         play_game_new(grid, size);
     }
 }
+
+void Menu_auto_mask(int** grid_existant, int size){
+    int** mask;
+    int choice;
+    printf("\nWell, you want a mask ? There it is :\n\n");
+    mask = Create_mask(size, grid_existant);
+    display_pad(mask, size);
+    printf("\nWell now ?\n  1. Play this mask with an existant grid\n  2. Return to main menu\n\n  -> ");
+    scanf("%d", &choice);
+    if (choice == 1){
+        play_game(grid_existant, size, mask);
+    }
+}
+
+void Menu_enter_mask(int** grid_existant,int size){
+    int choice;
+    int** mask = create_pad(size + 2);
+    printf("\n\nWell, there is your mask : \n\n");
+    display_pad(mask, size);
+    printf("\n\nThanks ! Now let's fill it !\n\n");
+    mask = manual_mask(size);
+    printf("\nCongratulations for your mask !\nThere is the matrice which correspond !\n\n");
+    print_pad_mask(mask, grid_existant, size);
+
+    printf("\nWhat do you want to do now ?\n  1. Use this mask on an existant grid and play\n  2. Return to main menu\n  -> ");
+    scanf("%d", &choice);
+    if (choice == 1){
+        play_game(grid_existant, size, mask);
+    }
+}
+
+void play_game(int** grid_solution, int size, int** mask) {
+    int life=3, choice;
+    int** grid_game = print_pad_mask(mask, grid_solution, size);
+    printf("\n\n\n");
+    do {
+        play_coord(grid_solution, size, grid_game, &life);
+        printf("\nYou have : %d life !\n", life);
+    } while ((end_game(grid_game, size) != 0) && (life>0));
+    printf("IT'S COMPLETE !!\n");
+    display_pad(grid_game, size);
+    printf("\n\nYour Game is finish, I hope you took some pleasure by playing.\nTo return to main menu, enter anything pleeeeaaase\n  -> ");
+    getch();
+}
