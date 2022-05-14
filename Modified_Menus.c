@@ -41,7 +41,7 @@ void Menu_principal(int value){
 void Menu_second_2(){
     int choice, size, **grid, **mask;
     int ** grid4 = array();
-    int ** grid8 = array();
+    int ** grid8 = array8();
     printf("\n\nWait ! What ?? You're playing on my game and you want to me to work at your place ??\nWhat a world !\n");
     printf("\nPff, enter the size in which you want to play please :\n  1. 4x4\n  2. 8x8\n\n   -> ");
     scanf("%d", &choice);
