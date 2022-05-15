@@ -1,13 +1,14 @@
-//
-// Created by eyfel on 13/05/2022.
-//
+//  Project :    TAKUZU
+//  Author :    Cyril NAKHLA, Eyfeline TALA
+//  Role :      Holds all of the protoypes of functions of the program
 
 #ifndef TAKUZU_INTERFACELES_H
 #define TAKUZU_INTERFACELES_H
 #include "stdbool.h"
 //Graphics
 void Get_size(int * size);
-bool menu_generation(int**full_grid);
+//bool menu_generation(int**full_grid, int*returned_size);
+int** menu_generation(bool* created, int*returned_size);
 void Menu_principal(int value);
 void Menu_second_1();
 void Menu_second_2();
@@ -50,22 +51,33 @@ int** generate_grid(int size, bool* created, bool automatic);
 //Cyril
 void play_game_new(int** grid_existant,int size);
 int** create_pad(int size);
-int auto_possible(int** solution, int size);
 int** copy_pad_mask(int** M, int** L, int size);
 int** Create_mask(int size, int** L);
 void display_pad(int** L, int size);
 int** manual_mask(int size);
 int** print_pad_mask(int** M, int** L, int size);
-void get_size(int* size);
-int check_valid_off(int** L,int value, int i, int j, int check, int size);
-void return_check(int** L, int** solution, int size, int col, int line, int value, int *life);
 void update(int** L, int size);
-int return_check_auto(int** solution, int size, int col, int line, int value);
-void manual_clues(int** solution, int size);
 void move_entry_check(int size, int* row, char* col);
-void play_coord(int** L, int size, int** solution, int *life);
+void play_coord(int** L, int size, int** solution, int *life, int**mask);
 int end_game(int** L, int size);
+
+//Last minute necessary changes
+int check_up(int value, int ** game_grid, int row, int col);
+int check_down(int value, int ** game_grid, int row, int col);
+int check_right(int value, int ** game_grid, int row, int col);
+int check_left(int value, int ** game_grid, int row, int col);
+int check_in_between_left_right(int value, int** game_grid, int row, int col);
+int check_in_between_up_down(int value, int** game_grid, int row, int col);
+void block_position_check(int size, int line, int col, char* block );
+int block_check(char block, int line, int col, int** game_grid);
+int check_number_line_and_column(int size, int** game_grid, int line, int col);
+int clues(int** game_grid, int size, int* row, int* column);
+void manual_clues(int** game_grid, int size);
 void auto_fill(int** solution, int size);
+int auto_possible(int** solution, int size);
+void return_check(int** game_grid, int size, int line, int col, int value, int** solution_grid, int*life);
+int check_valid_move(int** game_grid, int size, int line, int col, int value);
+void correct_move(int** solution_grid, int value, int line, int col);
 
 //Base game grid
 int** array();

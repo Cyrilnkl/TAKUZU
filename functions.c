@@ -1,11 +1,13 @@
-//
-// Created by eyfel on 13/05/2022.
-//
+//  Project :    TAKUZU
+//  Author :    Cyril NAKHLA, Eyfeline TALA
+//  Role :      Holds all of the functions of the program
+
 
 
 #include "functions.h"
 #include "stdio.h"
 #include "stdlib.h"
+#include "stdbool.h"
 #include "math.h"
 #include "time.h"
 #include "conio.h"
@@ -141,28 +143,28 @@ int** generate_grid(int size, bool* created, bool automatic)
 
                 // Checks if Takuzu rules are respected, and if so, validate the line as used
 
-                    if (!check_column(grid, size, i + 1)) {
-                        add_ascending_order(X, tested, &tested_ls);
-                    }
+                if (!check_column(grid, size, i + 1)) {
+                    add_ascending_order(X, tested, &tested_ls);
+                }
 
-                    else {
-                        line_OK = 1;
-                        used[i] = X;
-                        used_ls += 1;
-                        //Display
-                        if (size != 16 && !automatic) {
-                            display_grid(grid, size, i + 1);
-                            display_tested(decimal_lines_list, tested, tested_ls);
-                            display_used(decimal_lines_list, used, used_ls);
-                        }
-                        free(tested);
-                        tested = NULL;
-                        tested_ls = 0;
-                        if(size !=16 && !automatic) {
-                            printf("Press any key to start next line.\n\n");
-                            getch();
-                        }
+                else {
+                    line_OK = 1;
+                    used[i] = X;
+                    used_ls += 1;
+                    //Display
+                    if (size != 16 && !automatic) {
+                        display_grid(grid, size, i + 1);
+                        display_tested(decimal_lines_list, tested, tested_ls);
+                        display_used(decimal_lines_list, used, used_ls);
                     }
+                    free(tested);
+                    tested = NULL;
+                    tested_ls = 0;
+                    if(size !=16 && !automatic) {
+                        printf("Press any key to start next line.\n\n");
+                        getch();
+                    }
+                }
 
 
 
@@ -207,26 +209,28 @@ int** generate_grid(int size, bool* created, bool automatic)
 }
 
 //Full menu + puts the generated matrix inside given pointer and returns confirmation of creation
-bool menu_generation(int**full_grid)
+int** menu_generation(bool* created, int*returned_size)
 {
     int input, size;
-    bool created;
+    int** full_grid;
     printf("\n======= Generation =======\n");
     printf("What do you want to do ?\n");
     printf("    1. Display all valid rows\n");
     printf("    2. Generate a grid\n");
     printf("        0. Back\n\n  ->");
     other_entry_check(&input, 0, 2);
-    if(input)
+    if(input) {
         Get_size(&size);
+        *returned_size = size;
+    }
     if(input == 1)
     {
         display_all_valid_rows(size);
     }
     else if(input == 2)
     {
-        full_grid = generate_grid(size, &created, false);
-        return created;
+        full_grid = generate_grid(size, created, false);
+        return full_grid;
     }
 }
 
@@ -267,14 +271,17 @@ void display_used(int*valid_lines, int* used, int used_size)
 void display_grid(int** M, int size, int nb_line)
 {
 
-    printf(" ");
+    printf("  ");
     for(int i = 0; i < size; i++)
     {
         printf("   %c", 65+i);
     }
     printf("\n");
     for (int i = 0; i < nb_line; ++i) {
-        printf("%d", i+1);
+        if(i < 9)
+            printf(" %d", i+1);
+        else
+            printf("%d", i+1);
         for (int j = 0; j < size; ++j) {
             printf("   %d", M[i][j]);
         }
@@ -502,11 +509,8 @@ void add_line (int* grid_line, int* added_line, int size)
 }
 
 
-//Cyril
-
-
-#include "stdbool.h"
-#include "conio.h"
+//Cyril + huge changes
+//Main menu
 void Menu_principal(int value){
     int choice;
     bool run = true;
@@ -520,11 +524,11 @@ void Menu_principal(int value){
                    "====================================================================\n\n");
             printf("Hi !\nWelcome in our new game : The TAKUZU !\n");
             printf("\nHere is what you can do in my world ! Just ask and admire :p\n  1. Solve a grid\n  2. Automatically solve a grid\n  3. Generate a grid\n\t0. Quit\n\n  -> ");
-            scanf("%d", &choice);
+            other_entry_check(&choice, 0, 3);
         } else if (value == 1) {
             printf("Here we go again in our new game : The TAKUZU !\nI'm surprise, I thought you might be tired of it");
             printf("\nHere is what you can do in my world ! Just ask and admire :p\n  1. Solve a grid\n  2. Automatically solve a grid\n  3. Generate a grid\n\t0. Quit\n\n  -> ");
-            scanf("%d", &choice);
+            other_entry_check(&choice, 0,3);
         }
         if (choice == 1) {
             Menu_second_1();
@@ -533,8 +537,18 @@ void Menu_principal(int value){
             Menu_second_2();
             value = 1;
         } else if (choice == 3){
-            int** M;
-            menu_generation(M);
+            int** grid = NULL;
+            bool created;
+            int size;
+            grid = menu_generation(&created, &size);
+            if(created)
+            {
+                printf("\nDo you want to play with this generated grid ?\n  1. Play\n   2. Back to main menu\n \n ->");
+                other_entry_check(&choice, 1,2);
+                if(choice == 1)
+                    play_game_new(grid,size);
+            }
+
             value = 1;
         }
         else
@@ -542,20 +556,27 @@ void Menu_principal(int value){
     }
 }
 
+//Automatic solve
 void Menu_second_2(){
     int choice, size, **grid, **mask;
     int ** grid4 = array();
     int ** grid8 = array8();
+    int ** grid16 = array16();
     printf("\n\nWait ! What ?? You're playing on my game and you want to me to work at your place ??\nWhat a world !\n");
-    printf("\nPff, enter the size in which you want to play please :\n  1. 4x4\n  2. 8x8\n\n   -> ");
-    scanf("%d", &choice);
+    printf("\nPff, enter the size in which you want to play please :\n  1. 4x4\n  2. 8x8\n  3.16x16\n\n   -> ");
+    other_entry_check(&choice,1,3);
     if (choice == 1){
         size = 4;
         grid = grid4;
     }
-    else{
+    else if (choice == 2){
         size = 8;
         grid = grid8;
+    }
+    else
+    {
+        size = 16;
+        grid = grid16;
     }
     mask = Create_mask(size, grid);
     printf("\n\nThere is your matrice chef ! I will work on it right now !\n\n");
@@ -567,24 +588,31 @@ void Menu_second_2(){
     getch();
 }
 
+//Play menu
 void Menu_second_1(){
     int choice, size, **grid;
     int ** grid4 = array();
     int ** grid8 = array8();
+    int ** grid16 = array16();
     printf("\n\nSo you wanna play ?! Let's play !\n");
 
-    printf("\nBut firstly, enter the size in which you want to play please :\n  1. 4x4\n  2. 8x8\n\n   -> ");
-    scanf("%d", &choice);
+    printf("\nBut firstly, enter the size in which you want to play please :\n  1. 4x4\n  2. 8x8\n  3.16x16\n\n   -> ");
+    other_entry_check(&choice, 1, 3);
     if (choice == 1){
         size = 4;
         grid = grid4;
     }
-    else{
+    else if (choice == 2){
         size = 8;
         grid = grid8;
     }
+    else
+    {
+        size = 16;
+        grid = grid16;
+    }
     printf("\n\nHere is what you can do ! Just ask and admire :p\n  1. Enter a mask manually\n  2. Automatically generate a mask\n  3. Play\n\n  -> ");
-    scanf("%d", &choice);
+    other_entry_check(&choice,1, 3);
 
     if (choice==1){
         Menu_enter_mask(grid, size);
@@ -597,6 +625,7 @@ void Menu_second_1(){
     }
 }
 
+//Creates a mask before starting playing
 void play_game_new(int** grid_existant,int size){
     int** mask;
     int choice;
@@ -604,19 +633,22 @@ void play_game_new(int** grid_existant,int size){
     play_game(grid_existant, size, mask);
 }
 
+//Menu to automatically generate a mask from a given solution grid
 void Menu_auto_mask(int** grid_existant, int size){
     int** mask;
     int choice;
     printf("\nWell, you want a mask ? There it is :\n\n");
     mask = Create_mask(size, grid_existant);
+    printf("\n");
     display_pad(mask, size);
     printf("\nWell now ?\n  1. Play this mask with an existant grid\n  2. Return to main menu\n\n  -> ");
-    scanf("%d", &choice);
+    other_entry_check(&choice, 1, 2);
     if (choice == 1){
         play_game(grid_existant, size, mask);
     }
 }
 
+//Menu to enter a mask
 void Menu_enter_mask(int** grid_existant,int size){
     int choice;
     int** mask = create_pad(size + 2);
@@ -628,26 +660,32 @@ void Menu_enter_mask(int** grid_existant,int size){
     print_pad_mask(mask, grid_existant, size);
 
     printf("\nWhat do you want to do now ?\n  1. Use this mask on an existant grid and play\n  2. Return to main menu\n  -> ");
-    scanf("%d", &choice);
+    other_entry_check(&choice, 1, 2);
     if (choice == 1){
         play_game(grid_existant, size, mask);
     }
 }
 
+//Takes the solution grid, its size and its mask
+//Manages play
 void play_game(int** grid_solution, int size, int** mask) {
     int life=3, choice;
     int** grid_game = print_pad_mask(mask, grid_solution, size);
     printf("\n\n\n");
     do {
-        play_coord(grid_solution, size, grid_game, &life);
+        play_coord(grid_solution, size, grid_game, &life, mask);
         printf("\nYou have : %d life !\n", life);
     } while ((end_game(grid_game, size) != 0) && (life>0));
-    printf("IT'S COMPLETE !!\n");
+    if(life)
+        printf("IT'S COMPLETE !!\n");
+    else
+        printf("You lose.\n");
     display_pad(grid_game, size);
-    printf("\n\nYour Game is finish, I hope you took some pleasure by playing.\nTo return to main menu, enter anything pleeeeaaase\n  -> ");
+    printf("\n\nYour Game is finish, I hope you took some pleasure by playing.\nTo return to main menu, enter anything pleeeeaaase\n  ->\n\n ");
     getch();
 }
 
+//Creates a square size x size matrix
 int** create_pad(int size){
     int** L;
     L = (int**) malloc (size*sizeof(int*));
@@ -662,49 +700,9 @@ int** create_pad(int size){
     return L;
 }
 
-int auto_possible(int** solution, int size){
-    int answer, number_checked=0;
-    int** check=create_pad(size);
-    do {
-        for (int line=0; line<size; line++){
-            for (int col=0; col<size; col++){
-                check[line][col]=solution[line][col];
-                if (solution[line][col]==-1) {     // Take only empty spaces
-                    for (int value=0; value<2; value++) {       // test for 0 and 1
-                        answer = return_check_auto(solution, size, col, line, value);        // return of check
-                        if (answer != 100){
-                            break;
-                        }
-                    }
-                    if (answer==4){
-                        solution[line][col]=1;
-                    }
-                    else if (answer==5){
-                        solution[line][col]=1;
-                    }
-                    else if (answer==1){
-                        solution[line][col]=1;
-                    }
-                    else if (answer==2){
-                        solution[line][col]=0;
-                    }
-                    else if (answer==3){
-                        solution[line][col]=0;
-                    }
-                    else if (answer==0){
-                        solution[line][col]=0;
-                    }
-                }
-            }
-        }
-        number_checked++;
-    } while ((number_checked<30) && ((end_game(solution, size) != 0) && (answer != 100)));
-    if (answer==100 || number_checked<13){
-        return 0;
-    }
-    return 1;
-}
 
+//Takes a mask, its solution grid and its size
+//Applies the mask and returns the game_grid
 int** copy_pad_mask(int** M, int** L, int size){    /*     A TEST    */
     int** solution;
     solution = create_pad(size+2);
@@ -721,6 +719,8 @@ int** copy_pad_mask(int** M, int** L, int size){    /*     A TEST    */
     return solution;
 }
 
+//Takes the size and the solution grid
+//Creates and returns the mask of the grid
 int** Create_mask(int size, int** L){
     int** M;
     int show_num, number=0;
@@ -739,32 +739,38 @@ int** Create_mask(int size, int** L){
                 }
             }
         }
-    }while (auto_possible(copy_pad_mask(M, L, size), size) && (number < size*2 && number >((size*2)+3)));
+    }while (!auto_possible(copy_pad_mask(M, L, size), size) || (number < size*2 && number >((size*2)+3)));
     return M;
 }
 
-// générer manuellement  le mask
-
+// Takes a grid and its size
+//Display the given grid
 void display_pad(int** L, int size){
+    display_grid(L, size, 0);
     for (int i=0; i<size; i++){
-        printf("[");
+        if(i< 9)
+            printf(" %d   ", i+1);
+        else
+            printf("%d   ", i+1);
         for (int j=0; j<size; j++){
             if ((i>=size) && (j>=size))
-                printf("X  ");
+                printf("X   ");
             else if (L[i][j]==-1){
-                printf("_  ");
+                printf("_   ");
             }
             else if ((L[i][j]==1) || (L[i][j]==0)){
-                printf("%d  ", L[i][j]);
+                printf("%d   ", L[i][j]);
             }
             else{
-                printf("%d  ", L[i][j]);
+                printf("%d   ", L[i][j]);
             }
         }
-        printf("]\n");
+        printf("\n");
     }
 }
 
+//Takes the size of the grid
+//Allows the user to enter a mask
 int** manual_mask(int size) {
     int choice, ** M;
     M = create_pad(size+2);
@@ -781,221 +787,34 @@ int** manual_mask(int size) {
     return M;
 }
 
+//Does stuff ?
 int** print_pad_mask(int** M, int** L, int size){
     int** solution;
     solution = create_pad(size+2);
     printf("\nThere is your matrice, let's start :\n");
+    display_grid(M,size, 0);
     for (int i=0; i<size; i++){
-        printf("[");
+        if(i< 9)
+            printf(" %d   ", i+1);
+        else
+            printf("%d   ", i+1);
         for (int j=0; j<size; j++){
             if (M[i][j]==1){
                 solution[i][j]=L[i][j];
-                printf("%d  ", solution[i][j]);
+                printf("%d   ", solution[i][j]);
             }
             else{
                 solution[i][j]=-1;
-                printf("_  ");
+                printf("_   ");
             }
         }
-        printf("]\n\n");
+        printf("\n");
     }
+    update(solution, size);
     return solution;
 }
 
-void get_size(int* size){
-    int temp;
-    printf("Which size do you want ?\n  1. 4x4\n  2. 8x8\n-> ");
-    scanf("%d", &temp);
-    if (temp == 1){
-        *size = 4;
-    }
-    else if (temp == 2){
-        *size = 8;
-    }
-}
-
-int check_valid_off(int** L,int value, int i, int j, int check, int size){
-    if ((value==0) && (L[i][size]>=size/2)){
-        return 4;
-    }
-    else if ((value==0) && (L[size][j]>=size/2)){
-        return 5;
-    }
-    else if ((value==1) && (L[i][size+1]>=size/2)){
-        return 2;
-    }
-    else if ((value==1) && (L[size+1][j]>=size/2)){
-        return 3;
-    }
-    if ((i<size && i>0) && (j<size && j>0) && (value == 0) && (L[i-1][j]==0 && L[i+1][j]==0) && (L[i][j-1]==0 && L[i][j+1]==0)){      //vérifie si la case est comprise dans le grand carré [1,n-1] && vérifie s'il est entouré de mêmes valeurs ou non
-        return 1;
-    }
-    else if ((i<size && i>0) && (j<size && j>0) && (value == 1) && (L[i-1][j]==1 && L[i+1][j]==1) && (L[i][j-1]==1 && L[i][j+1]==1)){     //vérifie si la case est comprise dans le grand carré [1,n-1] && vérifie s'il est entouré de mêmes valeurs ou non
-        return 0;
-    }
-    if ((i == 0 || i == size) && (value == 0) && (L[i][j-1]==0 && L[i][j+1]==0)){
-        return 1;
-    }
-    else if ((i == 1 || i == size) && (value == 1) && (L[i][j-1]==1 && L[i][j+1]==1)){
-        return 0;
-    }
-    if ((j == 0 || j == size) && (value == 0) && (L[i][j-1]==0 && L[i][j+1]==0)){
-        return 1;
-    }
-    else if ((j == 1 || j == size) && (value == 1) && (L[i+1][j]==1 && L[i-1][j]==1)){
-        return 0;
-    }
-    if (check==1){
-        if ((value == 0) && ((L[i][j-1]==0 && L[i][j-2]==0) || (L[i+1][j]==0 && L[i+2][j]==0) || (L[i][j+1]==0 && L[i][j-1]==0) || (L[i][j+2]==0 && L[i][j+1]==0) || (L[i-1][j]==0 && L[i-2][j]==0) || (L[i-1][j]==0 && L[i+1][j]==0))){
-            return 1;
-        }
-        else if (((L[i][j-2]==1 && L[i][j-1]==1) || (L[i][j+1]==1 && L[i][j-1]==1) || (L[i][j+2]==1 && L[i][j+1]==1) || (L[i-2][j]==1 && L[i-1][j]==1) || (L[i+2][j]==1 && L[i+1][j]==1)) && (value == 1)){
-            return 0;
-        }
-        else return 100;
-    }
-    else if (check==2){
-        if ((value == 0) && ((L[i][j-2]==L[i][j-1]==0) || (L[i][j+2]==L[i][j+1]==0) || (L[i+2][j]==L[i+1][j]==0))) {
-            return 1;
-        }
-        else if ((value == 1) && ((L[i][j-2]==L[i][j-1]==1) || (L[i][j+2]==L[i][j+1]==1) || (L[i+2][j]==L[i+1][j]==1))){
-            return 0;
-        }
-        return 100;
-    }
-    else if (check==3){
-        if ((value == 0) && ((L[i][j-2]==0 && L[i][j-1]==0) || (L[i+2][j]==0 && L[i+1][j]==0))){
-            return 1;
-        }
-        else if ((value == 1) && ((L[i][j-2]==1 && L[i][j-1]==1) || (L[i+2][j]==1 && L[i+1][j]==1))){
-            return 0;
-        }
-        return 100;
-    }
-    else if (check==4) {
-        if ((value == 0) && ((L[i][j - 2] == L[i][j - 1] == 0) || (L[i + 1][j] == L[i - 1][j] == 0) ||
-                             (L[i - 2][j] == L[i - 1][j] == 0) || (L[i + 2][j] == L[i + 1][j] == 0))) {
-            return 1;
-        } else if ((value == 1) && ((L[i][j - 2] == L[i][j - 1] == 1) || (L[i + 1][j] == L[i - 1][j] == 1) ||
-                                    (L[i - 2][j] == L[i - 1][j] == 1) || (L[i + 2][j] == L[i + 1][j] == 1))) {
-            return 0;
-        }
-        return 100;
-    }
-    else if (check==5){
-        if ((value == 0) && ((L[i][j-2]==0 && L[i][j-1]==0) && (L[i-2][j]==0 && L[i-1][j]==0))){
-            return 1;
-        }
-        else if ((value == 1) && ((L[i][j-2]==1 && L[i][j-1]==1) && (L[i-2][j]==1 && L[i-1][j]==1))){
-            return 0;
-        }
-        return 100;
-    }
-    else if (check==6) {
-        if ((value == 0) && ((L[i][j - 2] == 0 && L[i][j - 1] == 0) || (L[i - 2][j] == 0 && L[i - 1][j] == 0) ||
-                             (L[i][j + 2] == 0 && L[i][j + 1] == 0))) {
-            return 1;
-        } else if ((value == 1) && ((L[i][j - 2] == 1 && L[i][j - 1] == 1) || (L[i - 2][j] == 1 && L[i - 1][j] == 1) ||
-                                    (L[i][j + 2] == 1 && L[i][j + 1] == 1))) {
-            return 0;
-        }
-        return 100;
-    }
-    else if (check==7){
-        if ((value == 0) && ((L[i-2][j]==0 && L[i-1][j]==0) || (L[i][j+2]==0 && L[i][j+1]==0))){
-            return 1;
-        }
-        else if ((value == 1) && ((L[i-2][j]==1 && L[i-1][j]==1) || (L[i][j+2]==1 && L[i][j+1]==1))){
-            return 0;
-        }
-        return 100;
-    }
-    else if (check==8){
-        if ((value == 0) && ((L[i-2][j]==0 && L[i-1][j]==0) || (L[i][j+2]==0 && L[i][j+1]==0) || (L[i+2][j]==0 && L[i+1][j]==0))){
-            return 1;
-        }
-        else if ((value == 1) && ((L[i-2][j]==1 && L[i-1][j]==1) || (L[i][j+2]==1 && L[i][j+1]==1) || (L[i+2][j]==1 && L[i+1][j]==1))){
-            return 0;
-        }
-        return 100;
-    }
-    else if (check==9){
-        if ((value == 0) && ((L[i+1][j]==0 && L[i+2][j]==0) || (L[i][j+2]==0 && L[i][j+1]==0))){
-            return 1;
-        }
-        else if ((value == 1) && ((L[i+1][j]==1 && L[i+2][j]==1) || (L[i][j+2]==1 && L[i][j+1]==1))){
-            return 0;
-        }
-        return 100;
-    }
-    return 100;
-}
-
-
-void return_check(int** L, int** solution, int size, int col, int line, int value, int *life){
-    int return_check=-1;
-    if ((line > 1 && line < size-2) && (col > 1 && col < size-2)){
-        return_check=check_valid_off(solution, value, line, col, 1, size);
-    }
-    else if ((line<2) && (col>1 && col< size-2)){
-        return_check=check_valid_off(solution, value, line, col, 2, size);
-    }
-    else if ((line<2)&& (col>=size-2)){
-        return_check=check_valid_off(solution, value, line, col, 3, size);
-    }
-    else if ((line>=2 && line<size-2)&& (col>=size-2)){
-        return_check=check_valid_off(solution, value, line, col, 4, size);
-    }
-    else if ((line>=size-2)&& (col>=size-2)){
-        return_check=check_valid_off(solution, value, line, col, 5, size);
-    }
-    else if ((line>=size-2) && (col>1 && col< size-2)){
-        return_check=check_valid_off(solution, value, line, col, 6, size);
-    }
-    else if ((line>=size-2) && (col<2)){
-        return_check=check_valid_off(solution, value, line, col, 7, size);
-    }
-    else if ((line<size-2 && line>1) && (col<2)){
-        return_check=check_valid_off(solution, value, line, col, 8, size);
-    }
-    else if ((line<2) && (col<2)){
-        return_check=check_valid_off(solution, value, line, col, 9, size);
-    }
-
-    switch (return_check) {
-        case 0:
-            printf("There is too much 1 side by side !\n");
-            *life-=1;
-            break;
-        case 1:
-            printf("There is too much 0 side by side !\n");
-            *life-=1;
-            break;
-        case 2:
-            printf("There is too much 1 in this line !\n");
-            *life-=1;
-            break;
-        case 3:
-            printf("There is too much 1 in this column !\n");
-            *life-=1;
-            break;
-        case 4:
-            printf("There is too much 0 in this line !\n");
-            *life-=1;
-            break;
-        case 5:
-            printf("There is too much 0 in this column !\n");
-            *life-=1;
-            break;
-        default :
-            printf("\nIt looks like a valid mouv' !\n");
-            solution[line][col]=value;
-    }
-    if (L[line][col]!=value){
-        printf("\n(Hint : it's not a correct move !)\n"); /*mettre sleep*/
-    }
-}
-
+//Keeps track of the number of 0s and 1s
 void update(int** L, int size){
     int Zrow, Orow;
     for (int i=0; i<size; i++){
@@ -1027,99 +846,7 @@ void update(int** L, int size){
     }
 }
 
-int return_check_auto(int** solution, int size, int col, int line, int value){
-    int return_check=100;
-    if ((line > 1 && line < size-2) && (col > 1 && col < size-2)){
-        return_check=check_valid_off(solution, value, line, col, 1, size);
-    }
-    else if ((line<2) && (col>1 && col< size-2)){
-        return_check=check_valid_off(solution, value, line, col, 2, size);
-    }
-    else if ((line<2)&& (col>=size-2)){
-        return_check=check_valid_off(solution, value, line, col, 3, size);
-    }
-    else if ((line>=2 && line<size-2)&& (col>=size-2)){
-        return_check=check_valid_off(solution, value, line, col, 4, size);
-    }
-    else if ((line>=size-2)&& (col>=size-2)){
-        return_check=check_valid_off(solution, value, line, col, 5, size);
-    }
-    else if ((line>=size-2) && (col>1 && col< size-2)){
-        return_check=check_valid_off(solution, value, line, col, 6, size);
-    }
-    else if ((line>=size-2) && (col<2)){
-        return_check=check_valid_off(solution, value, line, col, 7, size);
-    }
-    else if ((line<size-2 && line>1) && (col<2)){
-        return_check=check_valid_off(solution, value, line, col, 8, size);
-    }
-    else if ((line<2) && (col<2)){
-        return_check=check_valid_off(solution, value, line, col, 9, size);
-    }
-    return return_check;
-}
-
-
-void manual_clues(int** solution, int size){
-    int answer, found=0;
-    for (int line=0; line<size; line++) {
-        for (int col = 0; col < size; col++) {
-            if (solution[line][col] == -1) {     // Take only empty spaces
-                for (int value = 0; value < 2; value++) {       // test for 0 and 1
-                    answer = return_check_auto(solution, size, col, line, value);        // return of check
-                    if (answer != 100) {
-                        break;
-                    }
-                }
-                if (answer == 1 || answer == 4 || answer == 5) {
-                    if (solution[line][size] == size / 2) {
-                        printf("\nCoord : %d%c - > There are too many 0 in this line ! The maximum is %d !\n", line + 1,
-                               col + 65, size / 2);
-                    } else if (solution[size][col] == size / 2) {
-                        printf("\nCoord : %d%c - > There are too many 0 in this column ! The maximum is %d !\n",
-                               line + 1,
-                               col + 65, size / 2);
-                    } else {
-                        printf("\nCoord : %d%c - > There are too many 0 side by side ! The maximum is 2 !\n", line + 1,
-                               col + 65);
-                    }
-                    found = 1;
-                    solution[line][col] = 1;
-                    break;
-                } else if (answer == 2 || answer == 3 || answer == 0) {
-
-                    if (solution[line][size + 1] >= size / 2) {
-                        printf("\nCoord : %d%c - > There are too many 1 in this line ! The maximum is %d !\n", line + 1,
-                               col + 65, size / 2);
-
-                        found = 1;
-                    } else if (solution[size + 1][col] >= size / 2) {
-                        printf("\nCoord : %d%c - > There are too many 1 in this column ! The maximum is %d !\n",
-                               line + 1,
-                               col + 65, size / 2);
-
-                        found = 1;
-                    } else {
-                        printf("\nCoord : %d%c - > There are too many 1 side by side ! The maximum is 2 !\n", line + 1,
-                               col + 65);
-
-                        found = 1;
-                    }
-                }
-                if (found==1) {
-                    solution[line][col] = 0;
-                    break;
-                }
-            }
-            update(solution, size);
-        }
-        if (found == 1) {
-            break;
-        }
-    }
-}
-
-
+//Security of user move input
 void move_entry_check(int size, int* row, char* col)
 {
     char c;
@@ -1131,19 +858,42 @@ void move_entry_check(int size, int* row, char* col)
     } while (((scanf("%d%c%c", row, col, &c)>4 || c!='\n') && clean_stdin()) || (*row<1 || *row>size || *col <'A' || *col >'A'+size-1) && (*row!=7 && *col!='Z'));
 }
 
-void play_coord(int** L, int size, int** solution, int *life){
-    int row, tempV;
+//Takes the game grid, its mask, its solution and size + the remaining lives
+// Manages all of play
+void play_coord(int** L, int size, int** solution, int *life, int**mask){
+    int row, tempV, temp_col;
     char col;
+    bool is_base_case = false;
 
     display_pad(solution, size);
-    move_entry_check(size, &row, &col);
 
+    //Assure that the user enter a correct case and that it is not a given case
+    move_entry_check(size, &row, &col);
+    temp_col = col -65;
+    if(row != 69 && col != 'Z' && mask[row-1][temp_col] == 1)
+        is_base_case =true;
+    while(is_base_case)
+    {
+        printf("\nYou cannot modify this case.\n");
+        move_entry_check(size, &row, &col);
+        temp_col = col -65;
+        if(mask[row-1][temp_col] == 1)
+            is_base_case =true;
+        else
+            is_base_case = false;
+    }
+    //Clues key
     if (row==7 && col=='Z'){
         printf("\nLet's give you a clue ! ");
         manual_clues(solution, size);
     }
+    //Secret auto finish key
+    else if(row == 69 && col == 'Z') {
+        printf("\nNow in auto completion mode.\n");
+        auto_fill(solution, size);
+    }
+    //Reads value and checks validity of the move
     else {
-
         printf("\nWhich value do you want to put ?  -> ");
         scanf("%d", &tempV);
         while ((tempV < 0) || (tempV > 1)) {         /* fonctionne pas pour les lettres !! */
@@ -1152,11 +902,12 @@ void play_coord(int** L, int size, int** solution, int *life){
         }
         row = row - 1;
         col -= 65;
-        return_check(L, solution, size, col, row, tempV, life);
+        return_check(solution, size, row, col,tempV, L, life);
     }
     update(solution, size);
 }
 
+//Ends the game
 int end_game(int** L, int size){
     int count_num=0, verif=0;
     for (int i=0; i<size; i++){
@@ -1183,58 +934,8 @@ int end_game(int** L, int size){
     return 1;
 }
 
-void auto_fill(int** solution, int size){
-    int answer, number_check=0;
-    do {
-        for (int line=0; line<size; line++){
-            for (int col=0; col<size; col++){
-                if (solution[line][col]==-1) {     // Take only empty spaces
-                    if (number_check>100){
-                        solution[line][col]=1;
-                    }
-                    for (int value=0; value<2; value++) {       // test for 0 and 1
-                        answer = return_check_auto(solution, size, col, line, value);        // return of check
-                        if (answer != 100){
-                            break;
-                        }
-                    }
-                    if (answer==4){
-                        solution[line][col]=1;
-                        printf("\nCoord : %d%c .There are too much 0 in this line !\n", line+1, col+65);
-                    }
-                    else if (answer==5){
-                        solution[line][col]=1;
-                        printf("\nCoord : %d%c .There are too much 0 in this column !\n", line+1, col+65);
-                    }
-                    else if (answer==1){
-                        solution[line][col]=1;
-                        printf("\nCoord : %d%c .There are too much 0 side by side !\n", line+1, col+65);
-                    }
-                    else if (answer==2){
-                        solution[line][col]=0;
-                        printf("\nCoord : %d%c .There are too much 1 in this line !\n", line+1, col+65);
-                    }
-                    else if (answer==3){
-                        solution[line][col]=0;
-                        printf("\nCoord : %d%c .There are too much 1 in this column !\n", line+1, col+65);
-                    }
-                    else if (answer==0){
-                        solution[line][col]=0;
-                        printf("\nCoord : %d%c .There are too much 1 side by side !\n", line+1, col+65);
-                    }
-                    update(solution, size);
-                    display_pad(solution, size);
-                    printf("\n");
 
-                }
-            }
-        }number_check++;    //truc qui arrete le temps
-    } while (end_game(solution, size) != 0);
-}
-
-
-
-
+//Creates and returns a 4x4 grid
 int** array() {
     int** test = (int**) malloc(6*sizeof (int*));
     for (int i = 0; i < 6; ++i) {
@@ -1255,6 +956,8 @@ int** array() {
     return test;
 }
 
+
+//Creates and returns a 8x8 grid
 int** array8() {
     int** test = (int**) malloc(10*sizeof (int*));
     for (int i = 0; i < 10; ++i) {
@@ -1280,6 +983,7 @@ int** array8() {
     return test;
 }
 
+//Creates and returns a 16x16 grid
 int** array16() {
     int** test = (int**) malloc(18*sizeof (int*));
     for (int i = 0; i < 18; ++i) {
@@ -1327,4 +1031,403 @@ int** array16() {
         }
     }
     return test;
+}
+
+
+
+//Takes the game grid, the position of the case and a value
+//Checks whether the 2 cases upwards hold the same number as value
+//Returns -1 if we cannot know, 0 if all 3 case would be the same and 1 if value can be put in the given case
+int check_up(int value, int ** game_grid, int row, int col)
+{
+    if(game_grid[row-2][col] == -1 ||game_grid[row-1][col] == -1 || game_grid[row-2][col] != game_grid[row-1][col])
+        return -1;
+    if(game_grid[row-2][col] == game_grid[row-1][col] && game_grid[row-1][col] == value)
+        return 0;
+    return 1;
+}
+
+//Takes the game grid, the position of the case and a value
+//Checks whether the 2 cases downwards hold the same number as value
+//Returns -1 if we cannot know, 0 if all 3 case would be the same and 1 if value can be put in the given case
+int check_down(int value, int ** game_grid, int row, int col)
+{
+    if(game_grid[row+2][col] == -1 ||game_grid[row+1][col] == -1 || game_grid[row+2][col] != game_grid[row+1][col])
+        return -1;
+    if(game_grid[row+2][col] == game_grid[row+1][col] && game_grid[row+1][col] == value)
+        return 0;
+    return 1;
+}
+
+//Takes the game grid, the position of the case and a value
+//Checks whether the 2 cases to the right hold the same number as value
+//Returns -1 if we cannot know, 0 if all 3 case would be the same and 1 if value can be put in the given case
+int check_right(int value, int ** game_grid, int row, int col)
+{
+    if(game_grid[row][col+2] == -1 || game_grid[row][col+1] == -1 || game_grid[row][col+2] != game_grid[row][col+1])
+        return -1;
+    if(game_grid[row][col+2] == game_grid[row][col+1] && game_grid[row][col+1] == value)
+        return 0;
+    return 1;
+}
+
+
+//Takes the game grid, the position of the case and a value
+//Checks whether the 2 cases to the left hold the same number as value
+//Returns -1 if we cannot know, 0 if all 3 case would be the same and 1 if value can be put in the given case
+int check_left(int value, int ** game_grid, int row, int col)
+{
+    if(game_grid[row][col-2] == -1 || game_grid[row][col-1] == -1 || game_grid[row][col-2] != game_grid[row][col-1])
+        return -1;
+    if(game_grid[row][col-2] == game_grid[row][col-1] && game_grid[row][col-1] == value)
+        return 0;
+    return 1;
+}
+
+//Takes the game grid, the position of the case and a value
+//Checks whether the cases directly left and right hold the same number as value
+//Returns -1 if we cannot know, 0 if all 3 case would be the same and 1 if value can be put in the given case
+int check_in_between_left_right(int value, int** game_grid, int row, int col)
+{
+    if(game_grid[row][col-1] == -1 || game_grid[row][col+1] == -1 || game_grid[row][col-1] != game_grid[row][col+1])
+        return -1;
+    if(game_grid[row][col-1] == game_grid[row][col+1]  && game_grid[row][col+1] == value)
+        return 0;
+    return 1;
+}
+
+//Takes the game grid, the position of the case and a value
+//Checks whether the cases directly up and down hold the same number as value
+//Returns -1 if we cannot know, 0 if all 3 case would be the same and 1 if value can be put in the given case
+int check_in_between_up_down(int value, int** game_grid, int row, int col)
+{
+    if(game_grid[row-1][col] == -1 || game_grid[row+1][col] == -1 || game_grid[row-1][col] != game_grid[row+1][col])
+        return -1;
+    if(game_grid[row-1][col] == game_grid[row+1][col] && game_grid[row+1][col] == value)
+        return 0;
+    return 1;
+}
+
+//Takes the size of the grid and the position of the case
+//Puts in block the relative position of the case to the sides of the grid
+void block_position_check(int size, int line, int col, char* block )
+{
+    if(line < 2 && col < 2)
+        *block = 'A';
+    else if(line <2 && col >= 2 && col < size-2 )
+        *block = 'B';
+    else if(line < 2 && col >= size-2 )
+        *block = 'C';
+    else if(line >=2 && line < size-2 && col < 2)
+        *block = 'D';
+    else if(line >=2 && line < size-2 && col >=2 && col < size-2)
+        *block = 'E';
+    else if(line >=2 && line < size -2 && col >= size-2)
+        *block = 'F';
+    else if(line >= size-2 && col < 2)
+        *block = 'G';
+    else if(line >= size-2 && col >=2 && col < size-2)
+        *block = 'H';
+    else
+        *block = 'I';
+}
+
+//Takes the position of the case, its block and the game grid
+//Applies the right test in function of the block
+//Returns 1 if an answer was found, 0 otherwise
+int block_check(char block, int line, int col, int** game_grid)
+{
+    switch (block) {
+        case 'A':{
+            if(!check_right(1, game_grid, line, col ) || !check_down(1, game_grid, line, col)){
+                game_grid[line][col] = 0;
+                return 1;}
+            else if(check_right(1, game_grid, line, col ) == 1 || check_down(1, game_grid, line, col) == 1){
+                game_grid[line][col] = 1;
+                return 1;}
+            else
+                return 0;
+            break;
+        }
+        case 'B':{
+            if(!check_right(1, game_grid, line, col ) || !check_down(1, game_grid, line, col) || !check_left(1, game_grid, line, col)){
+                game_grid[line][col] = 0;
+                return 1;}
+            else if(check_right(1, game_grid, line, col ) == 1 || check_down(1, game_grid, line, col) == 1 || check_left(1, game_grid, line, col) == 1){
+                game_grid[line][col] = 1;
+                return 1;}
+            else
+                return 0;
+            break;
+        }
+        case 'C':{
+            if(!check_left(1, game_grid, line, col ) || !check_down(1, game_grid, line, col)){
+                game_grid[line][col] = 0;
+                return 1;}
+            else if(check_left(1, game_grid, line, col ) == 1 || check_down(1, game_grid, line, col) == 1){
+                game_grid[line][col] = 1;
+                return 1;}
+            else
+                return 0;
+            break;
+        }
+        case 'D':{
+            if(!check_right(1, game_grid, line, col ) || !check_down(1, game_grid, line, col) || !check_up(1, game_grid, line, col)){
+                game_grid[line][col] = 0;
+                return 1;}
+            else if(check_right(1, game_grid, line, col ) == 1 || check_down(1, game_grid, line, col) == 1 || check_up(1, game_grid, line, col) == 1){
+                game_grid[line][col] = 1;
+                return 1;}
+            else
+                return 0;
+            break;
+        }
+        case 'E':{
+            if(!check_left(1, game_grid, line, col ) || !check_down(1, game_grid, line, col) || !check_up(1, game_grid, line, col) || !check_right(1,game_grid,line, col)){
+                game_grid[line][col] = 0;
+                return 1;}
+            else if(check_left(1, game_grid, line, col ) == 1 || check_down(1, game_grid, line, col) == 1 || check_up(1, game_grid, line, col) == 1 || check_right(1,game_grid,line, col) == 1){
+                game_grid[line][col] = 1;
+                return 1;}
+            else
+                return 0;
+            break;
+        }
+        case 'F':{
+            if(!check_left(1, game_grid, line, col ) || !check_down(1, game_grid, line, col) || !check_up(1, game_grid, line, col)){
+                game_grid[line][col] = 0;
+                return 1;}
+            else if(check_left(1, game_grid, line, col ) == 1 || check_down(1, game_grid, line, col) == 1 || check_up(1, game_grid, line, col) == 1){
+                game_grid[line][col] = 1;
+                return 1;}
+            else
+                return 0;
+            break;
+        }
+        case 'G':{
+            if(!check_right(1, game_grid, line, col ) || !check_up(1, game_grid, line, col)){
+                game_grid[line][col] = 0;
+                return 1;}
+            else if(check_right(1, game_grid, line, col ) == 1 || check_up(1, game_grid, line, col) == 1){
+                game_grid[line][col] = 1;
+                return 1;}
+            else
+                return 0;
+            break;
+        }
+        case 'H':{
+            if(!check_left(1, game_grid, line, col ) || !check_right(1, game_grid, line, col) || !check_up(1, game_grid, line, col)){
+                game_grid[line][col] = 0;
+                return 1;}
+            else if(check_left(1, game_grid, line, col ) == 1 || check_right(1, game_grid, line, col) == 1 || check_up(1, game_grid, line, col) == 1){
+                game_grid[line][col] = 1;
+                return 1;}
+            else
+                return 0;
+            break;
+        }
+        case 'I':{
+            if(!check_left(1, game_grid, line, col ) || !check_up(1, game_grid, line, col)){
+                game_grid[line][col] = 0;
+                return 1;}
+            else if(check_left(1, game_grid, line, col ) == 1 || check_up(1, game_grid, line, col) == 1){
+                game_grid[line][col] = 1;
+                return 1;}
+            else
+                return 0;
+            break;
+        }
+    }
+}
+
+//Takes the grid, its size and the position of a case
+//Checks whether a line only has 1 empty case
+//Returns 0 or 1 as the value to put in the case, -1 if it's impossible to know
+int check_number_line_and_column(int size, int** game_grid, int line, int col)
+{
+    if(game_grid[line][size] + game_grid[line][size+1] == size-1)
+    {
+        if(game_grid[line][size+1] == size/2)
+            return 0;
+        return 1;
+    }
+    else if(game_grid[size][col] + game_grid[size+1][col] == size-1)
+    {
+        if(game_grid[size+1][col] == size/2)
+            return 0;
+        return 1;
+    }
+    return -1;
+}
+
+
+//Takes the game grid, its size and line and column pointer to store a case position
+//Manages all the différent tests and fills a case
+//Puts position of the filled case in the given pointers
+int clues(int** game_grid, int size, int* row, int* column) {
+    int answer, found = 0;
+    char block;
+    for (int line = 0; line < size; line++) {
+        for (int col = 0; col < size; col++) {
+            if (game_grid[line][col] == -1) {// Take only empty spaces
+                block_position_check(size, line, col, &block);
+                if( check_number_line_and_column(size, game_grid, line, col) != -1)
+                {
+                    game_grid[line][col] = check_number_line_and_column(size, game_grid, line, col);
+                    found = 1;
+                }
+                else if(line != 0 && line != size-1 && col!=0 && col!=size-1){
+                    if(!check_in_between_left_right(1, game_grid, line, col) || !check_in_between_up_down(1, game_grid, line, col)) {
+                        game_grid[line][col] = 0;
+                        found = 1;}
+                    else if(check_in_between_left_right(1,game_grid, line, col) == 1 || check_in_between_up_down(1,game_grid, line, col) == 1 ){
+                        game_grid[line][col] = 1;
+                        found =1;}
+                    else {
+                        found = block_check(block, line, col, game_grid);
+                    }
+                }
+                else {
+                    found = block_check(block, line, col, game_grid);
+                }
+            }
+            if (found) {
+                *row = line;
+                *column = col;
+                return 1;
+            }
+        }
+    }
+}
+
+
+//Separated interface for clues to reuse clues for part2 of the project
+void manual_clues(int** game_grid, int size)
+{
+    int row;
+    int column;
+    clues(game_grid, size, &row, &column);
+    printf("\nAdded number at case %d%c\n", row+1, column+65);
+}
+
+//Takes the game grid and its size to solve it automatically
+void auto_fill(int** game_grid, int size){
+    int answer, number_check=0;
+    do {
+        manual_clues(game_grid, size);
+        update(game_grid, size);
+        display_pad(game_grid, size);
+        printf("\nPress any key to advance\n  ->");
+        getch();
+        printf("\n");
+    }while (end_game(game_grid, size) != 0);
+}
+
+// Takes a possible game grid and its size
+//Checks whether or not the grid is solvable
+//Returns 1 if it is, 0 otherwise
+int auto_possible(int** game_grid, int size)
+{   int number_check=0, row, col;
+    do {
+        clues(game_grid, size, &row, &col);
+        update(game_grid, size);
+        number_check++;
+    }while (end_game(game_grid, size) != 0 && number_check <100);
+    if (number_check >= 100){
+        return 0;}
+    else
+        return 1;
+}
+
+
+//Takes the current game grid, its size and the case that the user want to put value in
+//Checks whether or not the move is valid according to the current grid
+//Returns 1 if that's a valid conclusion, 0 if that's wrong, -1 if the move was done with no way of knowing
+int check_valid_move(int** game_grid, int size, int line, int col, int value)
+{
+    char block;
+    block_position_check(size, line, col, &block);
+    if( check_number_line_and_column(size, game_grid, line, col) != -1)
+    {
+        if(value == check_number_line_and_column(size, game_grid, line, col))
+            return 1;
+        else if(check_number_line_and_column(size, game_grid, line, col) != -1 && check_number_line_and_column(size, game_grid, line, col)!= value)
+            return 0;
+    }
+    else if(line != 0 && line != size-1 && col!=0 && col!=size-1){
+        if(!check_in_between_left_right(value, game_grid, line, col) || !check_in_between_up_down(value, game_grid, line, col)) {
+            return 0;}
+        else if(check_in_between_left_right(value,game_grid, line, col) == 1 || check_in_between_up_down(value,game_grid, line, col) == 1 ){
+            return 1;}
+        else {
+            if(block_check(block, line, col, game_grid))
+            {
+                if(game_grid[line][col] == value) {
+                    game_grid[line][col] = -1;
+                    return 1;
+                }
+                else {
+                    game_grid[line][col] = -1;
+                    return 0;
+                }
+            }
+            else {
+                game_grid[line][col] =-1;
+                printf("Tis is why");
+                return -1;
+            }
+        }
+    }
+    else {
+        if(block_check(block, line, col, game_grid))
+        {
+            if(game_grid[line][col] == value) {
+                game_grid[line][col] = -1;
+                return 1;
+            }
+            else {
+                game_grid[line][col] = -1;
+                return 0;
+            }
+        }
+        else {
+            game_grid[line][col] =-1;
+            printf("This is why 2");
+            return -1;
+        }
+    }
+
+}
+
+//Takes the solution grid and the case the user wants to put value in inside the game grid
+//if it was not a correct move, tells the player
+void correct_move(int** solution_grid, int value, int line, int col)
+{
+    if(value != solution_grid[line][col])
+        printf("But it's not a correct move.\n");
+}
+
+// Takes the game grid, its size, the case wants to put value in, the solution grid and the remaining life
+//Manages all valid_move checks
+void return_check(int** game_grid, int size, int line, int col, int value, int** solution_grid, int*life)
+{
+    switch (check_valid_move(game_grid, size,line,col,value)) {
+        case 1:
+        {
+            printf("\nValid move!\n");
+            game_grid[line][col] = value;
+            break;
+        }
+        case 0:
+        {
+            printf("\nThat is not a possible move.\n");
+            *life -=1;
+            break;
+        }
+        default: {
+            printf("\nThat certainly is a move.\n");
+            printf(" row %d %d, col %d %d", game_grid[line][size], game_grid[line][size+1], game_grid[size][col], game_grid[size+1][col]);
+            correct_move(solution_grid, value, line, col);
+        }
+    }
 }
